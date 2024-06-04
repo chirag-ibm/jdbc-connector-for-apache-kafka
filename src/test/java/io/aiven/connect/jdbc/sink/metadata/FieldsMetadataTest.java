@@ -17,9 +17,7 @@
 
 package io.aiven.connect.jdbc.sink.metadata;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -64,12 +62,14 @@ public class FieldsMetadataTest {
 
     @Test
     public void missingValueSchemaCanBeOk() {
+        final Set<String> name = new HashSet<>();
+        name.add("name");
         assertThat(extract(
             JdbcSinkConfig.PrimaryKeyMode.RECORD_KEY,
             Collections.emptyList(),
             SIMPLE_STRUCT_SCHEMA,
             null
-        ).allFields.keySet()).isEqualTo(Set.of("name"));
+        ).allFields.keySet()).isEqualTo(name);
 
         // this one is a bit weird, only columns being inserted would be kafka coords...
         // but not sure should explicitly disallow!
@@ -78,7 +78,7 @@ public class FieldsMetadataTest {
             Collections.emptyList(),
             null,
             null
-        ).allFields.keySet())).isEqualTo(List.of("__connect_topic", "__connect_partition", "__connect_offset"));
+        ).allFields.keySet())).isEqualTo(Arrays.asList("__connect_topic", "__connect_partition", "__connect_offset"));
     }
 
     @Test
@@ -101,8 +101,12 @@ public class FieldsMetadataTest {
             SIMPLE_STRUCT_SCHEMA
         );
         assertThat(Lists.newArrayList(metadata.keyFieldNames)).isEqualTo(
-            List.of("__connect_topic", "__connect_partition", "__connect_offset"));
-        assertThat(metadata.nonKeyFieldNames).isEqualTo(Set.of("name"));
+            Arrays.asList("__connect_topic", "__connect_partition", "__connect_offset"));
+
+        HashSet<String> nameHashSet = new HashSet<String>() {{
+                add("name");
+            }};
+        assertThat(metadata.nonKeyFieldNames).isEqualTo(nameHashSet);
 
         final SinkRecordField topicField = metadata.allFields.get("__connect_topic");
         assertThat(topicField.schemaType()).isEqualTo(Schema.Type.STRING);
@@ -122,7 +126,7 @@ public class FieldsMetadataTest {
 
     @Test
     public void kafkaPkModeCustomNames() {
-        final List<String> customKeyNames = List.of("the_topic", "the_partition", "the_offset");
+        final List<String> customKeyNames = Arrays.asList("the_topic", "the_partition", "the_offset");
         final FieldsMetadata metadata = extract(
             JdbcSinkConfig.PrimaryKeyMode.KAFKA,
             customKeyNames,
@@ -138,7 +142,7 @@ public class FieldsMetadataTest {
         assertThatThrownBy(() ->
             extract(
                 JdbcSinkConfig.PrimaryKeyMode.KAFKA,
-                List.of("lone"),
+                    Collections.singletonList("lone"),
                 null,
                 SIMPLE_STRUCT_SCHEMA
             )).isInstanceOf(ConnectException.class);
@@ -153,7 +157,7 @@ public class FieldsMetadataTest {
     public void recordKeyPkModePrimitiveKey() {
         final FieldsMetadata metadata = extract(
             JdbcSinkConfig.PrimaryKeyMode.RECORD_KEY,
-            List.of("the_pk"),
+                Collections.singletonList("the_pk"),
             SIMPLE_PRIMITIVE_SCHEMA,
             SIMPLE_STRUCT_SCHEMA
         );
@@ -176,7 +180,7 @@ public class FieldsMetadataTest {
         assertThatThrownBy(() ->
             extract(
                 JdbcSinkConfig.PrimaryKeyMode.RECORD_KEY,
-                List.of("pk1", "pk2"),
+                Arrays.asList("pk1", "pk2"),
                 SIMPLE_PRIMITIVE_SCHEMA,
                 SIMPLE_STRUCT_SCHEMA
             )).isInstanceOf(ConnectException.class);
@@ -220,7 +224,7 @@ public class FieldsMetadataTest {
         assertThatThrownBy(() ->
             extract(
                 JdbcSinkConfig.PrimaryKeyMode.RECORD_VALUE,
-                List.of("nonexistent"),
+                    Collections.singletonList("nonexistent"),
                 SIMPLE_PRIMITIVE_SCHEMA,
                 SIMPLE_STRUCT_SCHEMA
             )).isInstanceOf(ConnectException.class);
@@ -235,7 +239,7 @@ public class FieldsMetadataTest {
             SIMPLE_STRUCT_SCHEMA
         );
 
-        assertThat(metadata.keyFieldNames).isEqualTo(Set.of("name"));
+        assertThat(metadata.keyFieldNames).isEqualTo(new HashSet<String>() {{ add("name"); }});
         assertThat(metadata.nonKeyFieldNames).isEqualTo(Collections.emptySet());
 
         assertThat(metadata.allFields.get("name").schemaType()).isEqualTo(Schema.Type.STRING);
@@ -255,14 +259,16 @@ public class FieldsMetadataTest {
 
         final FieldsMetadata metadata = extract(
             JdbcSinkConfig.PrimaryKeyMode.RECORD_VALUE,
-            Collections.singletonList("field1"),
-            Set.of("field2", "field4"),
+            Collections.singletonList("field1"), new HashSet<String>() {{
+                add("field2");
+                add("field4");
+            }},
             null,
             valueSchema
         );
 
-        assertThat(Lists.newArrayList(metadata.keyFieldNames)).isEqualTo(List.of("field1"));
-        assertThat(Lists.newArrayList(metadata.nonKeyFieldNames)).isEqualTo(List.of("field2", "field4"));
+        assertThat(Lists.newArrayList(metadata.keyFieldNames)).isEqualTo(Arrays.asList("field1"));
+        assertThat(Lists.newArrayList(metadata.nonKeyFieldNames)).isEqualTo(Arrays.asList("field2", "field4"));
     }
 
     @Test
@@ -275,43 +281,56 @@ public class FieldsMetadataTest {
                         .field("field3", Schema.INT64_SCHEMA)
                         .build();
 
-        var metadata = extract(
+        Set f1 = new HashSet();
+        f1.add("field3");
+        f1.add("field1");
+        f1.add("field2");
+
+        FieldsMetadata metadata = extract(
                 JdbcSinkConfig.PrimaryKeyMode.RECORD_VALUE,
                 Collections.singletonList("field4"),
-                Set.of("field3", "field1", "field2"),
+                f1,
                 null,
                 valueSchema
         );
 
         assertThat(Lists.newArrayList(metadata.allFields.keySet())).isEqualTo(
-            List.of("field4", "field2", "field1", "field3"));
+            Arrays.asList("field4", "field2", "field1", "field3"));
+
+        Set f2 = new HashSet();
+        f2.add("field4");
+        f2.add("field3");
 
         metadata = extract(
                 JdbcSinkConfig.PrimaryKeyMode.RECORD_VALUE,
                 Collections.singletonList("field1"),
-                Set.of("field4", "field3"),
+                f2,
                 null,
                 valueSchema
         );
 
-        assertThat(Lists.newArrayList(metadata.allFields.keySet())).isEqualTo(List.of("field4", "field1", "field3"));
+        assertThat(Lists.newArrayList(metadata.allFields.keySet())).isEqualTo(Arrays.asList("field4", "field1", "field3"));
 
-        final var keySchema =
+        final Schema keySchema =
                 SchemaBuilder.struct()
                         .field("field1", Schema.INT64_SCHEMA)
                         .field("field3", Schema.INT64_SCHEMA)
                         .field("field2", Schema.INT64_SCHEMA)
                         .build();
 
+        Set f3 = new HashSet();
+        f3.add("field3");
+        f3.add("field1");
+
         metadata = extract(
                 JdbcSinkConfig.PrimaryKeyMode.RECORD_KEY,
-                List.of("field2", "field3", "field1"),
-                Set.of("field3", "field1"),
+                Arrays.asList("field2", "field3", "field1"),
+                f3,
                 keySchema,
                 null
         );
 
-        assertThat(Lists.newArrayList(metadata.allFields.keySet())).isEqualTo(List.of("field1", "field2", "field3"));
+        assertThat(Lists.newArrayList(metadata.allFields.keySet())).isEqualTo(Arrays.asList("field1", "field2", "field3"));
     }
 
     private static FieldsMetadata extract(final JdbcSinkConfig.PrimaryKeyMode pkMode,

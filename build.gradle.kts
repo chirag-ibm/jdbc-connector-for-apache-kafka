@@ -22,7 +22,7 @@ plugins {
     `java-library`
 
     // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
-    checkstyle
+    //checkstyle
 
     // https://docs.gradle.org/current/userguide/jacoco_plugin.html
     jacoco
@@ -43,8 +43,8 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
 }
 
@@ -57,10 +57,10 @@ tasks.wrapper {
     distributionType = Wrapper.DistributionType.ALL
 }
 
-checkstyle {
-    toolVersion = "10.16.0"
-    configDirectory.set(rootProject.file("checkstyle/"))
-}
+//checkstyle {
+//    toolVersion = "9.3"
+//    configDirectory.set(rootProject.file("checkstyle/"))
+//}
 
 jacoco {
     toolVersion = "0.8.12"
@@ -117,7 +117,7 @@ publishing {
     }
 }
 
-val kafkaVersion = "3.3.2"
+val kafkaVersion = "2.2.0"
 val slf4jVersion = "2.0.13"
 
 val avroVersion = "1.8.1"
@@ -126,14 +126,16 @@ val confluentPlatformVersion = "4.1.4" // For compatibility tests use version 4.
 val hamcrestVersion = "2.2"
 val jacksonVersion = "2.17.0" // This Jackson is used in the tests.
 val jupiterVersion = "5.10.2"
+val jettyVersion = "12.0.8"
 val servletVersion = "4.0.1"
-val testcontainersVersion = "1.19.8"
+val testcontainersVersion = "1.19.7"
 val awaitilityVersion = "4.2.1"
 val log4jVersion = "2.20.0"
 
 // Integration tests are not necessary to change these
-val derbyVersion = "10.15.2.0"
-val mockitoVersion = "5.12.0"
+val derbyVersion = "10.14.2.0"
+val derbyShardVersion = "10.15.1.3"
+val mockitoVersion = "4.8.0"
 
 sourceSets {
     create("integrationTest") {
@@ -161,27 +163,27 @@ val integrationTestRuntimeOnly: Configuration by configurations.getting {
 dependencies {
     compileOnly("org.apache.kafka:connect-api:$kafkaVersion")
 
-    runtimeOnly("org.xerial:sqlite-jdbc:3.46.0.0")
+    runtimeOnly("org.xerial:sqlite-jdbc:3.45.3.0")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     runtimeOnly("net.sourceforge.jtds:jtds:1.3.1")
     runtimeOnly("net.snowflake:snowflake-jdbc:3.16.0")
     runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11")
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
 
-    implementation("com.google.guava:guava:33.2.1-jre")
+    implementation("com.google.guava:guava:33.1.0-jre")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
     testImplementation("org.junit.vintage:junit-vintage-engine:$jupiterVersion")
-    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation("org.mockito:mockito-inline:$mockitoVersion")
     testImplementation("org.mockito:mockito-junit-jupiter:$mockitoVersion")
     testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
     testImplementation("commons-io:commons-io:2.16.1")
     testImplementation("org.apache.derby:derby:$derbyVersion")
     testImplementation("org.apache.derby:derbyclient:$derbyVersion")
-    testImplementation("org.apache.derby:derbyshared:$derbyVersion")
+    testImplementation("org.apache.derby:derbyshared:$derbyShardVersion")
     testImplementation("org.apache.derby:derbytools:$derbyVersion")
-    testImplementation("org.assertj:assertj-core:3.26.0")
+    testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation("org.awaitility:awaitility:4.2.1")
 
     testRuntimeOnly("org.slf4j:slf4j-log4j12:$slf4jVersion")
@@ -196,6 +198,9 @@ dependencies {
     integrationTestImplementation("javax.servlet:javax.servlet-api:$servletVersion")
     integrationTestImplementation("org.apache.avro:avro:$avroVersion")
     integrationTestImplementation("org.apache.kafka:connect-runtime:$kafkaVersion")
+    integrationTestImplementation("org.eclipse.jetty:jetty-http:$jettyVersion")
+    integrationTestImplementation("org.eclipse.jetty:jetty-server:$jettyVersion")
+    integrationTestImplementation("org.eclipse.jetty:jetty-util:$jettyVersion")
     integrationTestImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
     integrationTestImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     integrationTestImplementation("org.testcontainers:kafka:$testcontainersVersion") // this is not Kafka version

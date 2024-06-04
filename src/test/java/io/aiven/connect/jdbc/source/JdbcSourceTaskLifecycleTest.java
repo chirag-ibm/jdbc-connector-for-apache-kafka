@@ -26,6 +26,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 import io.aiven.connect.jdbc.config.JdbcConfig;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,7 +54,8 @@ public class JdbcSourceTaskLifecycleTest extends JdbcSourceTaskTestBase {
 
     @Test
     public void testStartStop() {
-        try (final var mock = mockConstruction(SourceConnectionProvider.class, (m, c) -> {
+        try (final MockedConstruction<SourceConnectionProvider> mock =
+                     mockConstruction(SourceConnectionProvider.class, (m, c) -> {
             when(m.getConnection()).thenReturn(db.getConnection());
         })) {
             task.start(singleTableConfig());
@@ -79,9 +81,9 @@ public class JdbcSourceTaskLifecycleTest extends JdbcSourceTaskTestBase {
 
         // Subsequent polls have to wait for timeout
         task.poll();
-        assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceTask.MAX_QUERY_SLEEP_MS);
+        assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
         task.poll();
-        assertThat(time.milliseconds()).isEqualTo(startTime + 2 * JdbcSourceTask.MAX_QUERY_SLEEP_MS);
+        assertThat(time.milliseconds()).isEqualTo(startTime + 2 * JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
 
         task.stop();
     }
@@ -111,7 +113,8 @@ public class JdbcSourceTaskLifecycleTest extends JdbcSourceTaskTestBase {
 
         // Subsequent poll should wait for next timeout
         task.poll();
-        assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceTask.MAX_QUERY_SLEEP_MS);
+        assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
+
     }
 
     @Test
@@ -136,12 +139,13 @@ public class JdbcSourceTaskLifecycleTest extends JdbcSourceTaskTestBase {
         assertThat(records.get(0).sourcePartition()).isEqualTo(SECOND_TABLE_PARTITION);
 
         // Subsequent poll should wait for next timeout
-        records = pollRecords(task);
+        records = task.poll();
         assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
         validatePollResultTable(records, 1, SINGLE_TABLE_NAME);
-        records = pollRecords(task);
+        records = task.poll();
         assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
         validatePollResultTable(records, 1, SECOND_TABLE_NAME);
+
     }
 
     @Test
@@ -176,8 +180,7 @@ public class JdbcSourceTaskLifecycleTest extends JdbcSourceTaskTestBase {
 
         // Subsequent poll should wait for next timeout
         for (int i = 0; i < 2; i++) {
-            final List<SourceRecord> records;
-            records = pollRecords(task);
+            final List<SourceRecord> records = task.poll();
             assertThat(time.milliseconds()).isEqualTo(startTime + JdbcSourceConnectorConfig.POLL_INTERVAL_MS_DEFAULT);
             validatePollResultTable(records, 1, SINGLE_TABLE_NAME);
         }

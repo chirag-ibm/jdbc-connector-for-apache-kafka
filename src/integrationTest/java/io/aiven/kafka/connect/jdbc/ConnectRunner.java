@@ -17,12 +17,11 @@
 package io.aiven.kafka.connect.jdbc;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.common.utils.Time;
-import org.apache.kafka.connect.connector.policy.AllConnectorClientConfigOverridePolicy;
-import org.apache.kafka.connect.connector.policy.ConnectorClientConfigOverridePolicy;
 import org.apache.kafka.connect.runtime.Connect;
 import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kafka.connect.runtime.Herder;
@@ -55,20 +54,21 @@ public final class ConnectRunner {
     }
 
     void start() {
-        final Map<String, String> workerProps = Map.of(
-            "bootstrap.servers", bootstrapServers,
-            "offset.flush.interval.ms", Integer.toString(5000),
+        final Map<String, String> workerProps = new HashMap() {{
+                put("bootstrap.servers", bootstrapServers);
+                put("offset.flush.interval.ms", Integer.toString(5000));
+                put("key.converter", "org.apache.kafka.connect.converters.ByteArrayConverter");
+                put("value.converter", "org.apache.kafka.connect.converters.ByteArrayConverter");
+                put("internal.key.converter", "org.apache.kafka.connect.json.JsonConverter");
+                put("internal.key.converter.schemas.enable", "false");
+                put("internal.value.converter", "org.apache.kafka.connect.json.JsonConverter");
+                put("internal.value.converter.schemas.enable", "false");
+                put("offset.storage.file.filename", "");
+                put("plugin.path", pluginDir.toString());
+            }};
+
             // These don't matter much (each connector sets its own converters),
             // but need to be filled with valid classes.
-            "key.converter", "org.apache.kafka.connect.converters.ByteArrayConverter",
-            "value.converter", "org.apache.kafka.connect.converters.ByteArrayConverter",
-            "internal.key.converter", "org.apache.kafka.connect.json.JsonConverter",
-            "internal.key.converter.schemas.enable", "false",
-            "internal.value.converter", "org.apache.kafka.connect.json.JsonConverter",
-            "internal.value.converter.schemas.enable", "false",
-            // Don't need it since we'll memory MemoryOffsetBackingStore.
-            "offset.storage.file.filename", "",
-            "plugin.path", pluginDir.toString());
 
         final Time time = Time.SYSTEM;
         final String workerId = "test-worker";
@@ -77,14 +77,10 @@ public final class ConnectRunner {
         final Plugins plugins = new Plugins(workerProps);
         final StandaloneConfig config = new StandaloneConfig(workerProps);
 
-        final ConnectorClientConfigOverridePolicy overridePolicy = new AllConnectorClientConfigOverridePolicy();
-        final Worker worker = new Worker(workerId, time, plugins, config, new MemoryOffsetBackingStore(),
-            overridePolicy);
-        herder = new StandaloneHerder(worker, kafkaClusterId, overridePolicy);
-        final RestServer restServer = new RestServer(config);
-        restServer.initializeServer();
-        restServer.initializeResources(herder);
-        connect = new Connect(herder, restServer);
+
+        final Worker worker = new Worker(workerId, time, plugins, config, new MemoryOffsetBackingStore());
+        herder = new StandaloneHerder(worker, kafkaClusterId);
+        connect = new Connect(herder, new RestServer(config));
 
         connect.start();
     }

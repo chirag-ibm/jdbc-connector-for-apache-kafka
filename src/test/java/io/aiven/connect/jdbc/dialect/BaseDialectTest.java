@@ -307,13 +307,13 @@ public abstract class BaseDialectTest<T extends GenericDatabaseDialect> {
     }
 
     protected void verifyCreateOneColNoPk(final String expected) {
-        assertQueryEquals(expected, dialect.buildCreateTableStatement(tableId, List.of(
+        assertQueryEquals(expected, dialect.buildCreateTableStatement(tableId, Arrays.asList(
             new SinkRecordField(Schema.INT32_SCHEMA, "col1", false)
         )));
     }
 
     protected void verifyCreateOneColOnePk(final String expected) {
-        assertQueryEquals(expected, dialect.buildCreateTableStatement(tableId, List.of(
+        assertQueryEquals(expected, dialect.buildCreateTableStatement(tableId, Arrays.asList(
             new SinkRecordField(Schema.INT32_SCHEMA, "pk1", true)
         )));
     }
@@ -327,7 +327,7 @@ public abstract class BaseDialectTest<T extends GenericDatabaseDialect> {
     }
 
     protected void verifyAlterAddOneCol(final String... expected) {
-        assertThat(dialect.buildAlterTable(tableId, List.of(
+        assertThat(dialect.buildAlterTable(tableId, Arrays.asList(
             new SinkRecordField(Schema.OPTIONAL_INT32_SCHEMA, "newcol1", false)
         ))).containsExactly(expected);
     }

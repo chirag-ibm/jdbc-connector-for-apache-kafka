@@ -17,15 +17,7 @@
 
 package io.aiven.connect.jdbc.sink.metadata;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -133,16 +125,16 @@ public class FieldsMetadata {
             );
         }
 
-        final var allFieldsOrdered = new LinkedHashMap<String, SinkRecordField>();
-        for (final var fieldName : JdbcSinkConfig.DEFAULT_KAFKA_PK_NAMES) {
+        final LinkedHashMap<String, SinkRecordField> allFieldsOrdered = new LinkedHashMap<String, SinkRecordField>();
+        for (final String fieldName : JdbcSinkConfig.DEFAULT_KAFKA_PK_NAMES) {
             if (allFields.containsKey(fieldName)) {
                 allFieldsOrdered.put(fieldName, allFields.get(fieldName));
             }
         }
 
         if (valueSchema != null) {
-            for (final var field : valueSchema.fields()) {
-                final var fieldName = field.name();
+            for (final Field field : valueSchema.fields()) {
+                final String fieldName = field.name();
                 if (allFields.containsKey(fieldName)) {
                     allFieldsOrdered.put(fieldName, allFields.get(fieldName));
                 }
@@ -150,9 +142,9 @@ public class FieldsMetadata {
         }
 
         if (allFieldsOrdered.size() < allFields.size()) {
-            final var fieldKeys = new ArrayList<>(allFields.keySet());
+            final ArrayList<String> fieldKeys = new ArrayList<>(allFields.keySet());
             Collections.sort(fieldKeys);
-            for (final var fieldName : fieldKeys) {
+            for (final String fieldName : fieldKeys) {
                 if (!allFieldsOrdered.containsKey(fieldName)) {
                     allFieldsOrdered.put(fieldName, allFields.get(fieldName));
                 }

@@ -274,13 +274,14 @@ public class BufferedRecordsTest {
     }
 
     private JdbcSinkConfig multiModeConfig(final int batchSize) {
-        return new JdbcSinkConfig(Map.of(
-                "connection.url", "",
-                "auto.create", true,
-                "auto.evolve", true,
-                "batch.size", batchSize,
-                "insert.mode", "multi"
-        ));
+        final Map<String, Object> m = new HashMap<String, Object>() {{
+                put("connection.url", "");
+                put("auto.create", true);
+                put("auto.evolve", true);
+                put("batch.size", batchSize);
+                put("insert.mode", "multi");
+            }};
+        return new JdbcSinkConfig(m);
     }
 
     private SinkRecord wrapInSinkRecord(final Struct value) {

@@ -73,7 +73,7 @@ public class PostgreSqlDatabaseDialectTest extends BaseDialectTest<PostgreSqlDat
         castTypesTableDefinition =
                 new TableDefinition(
                         castTypesTableId,
-                        List.of(
+                        Arrays.asList(
                                 createColumnDefinition(
                                         castTypesPkColumn,
                                         Types.INTEGER,
@@ -220,8 +220,8 @@ public class PostgreSqlDatabaseDialectTest extends BaseDialectTest<PostgreSqlDat
         final String actual = dialect.buildInsertStatement(
                 castTypesTableId,
                 castTypesTableDefinition,
-                List.of(castTypesPkColumn),
-                List.of(columnUuid, columnJson, columnJsonb));
+                Arrays.asList(castTypesPkColumn),
+                Arrays.asList(columnUuid, columnJson, columnJsonb));
         assertQueryEquals(expected, actual);
     }
 
@@ -231,8 +231,8 @@ public class PostgreSqlDatabaseDialectTest extends BaseDialectTest<PostgreSqlDat
         final String actual = dialect.buildUpdateStatement(
                 castTypesTableId,
                 castTypesTableDefinition,
-                List.of(castTypesPkColumn),
-                List.of(columnUuid, columnJson, columnJsonb));
+                Arrays.asList(castTypesPkColumn),
+                Arrays.asList(columnUuid, columnJson, columnJsonb));
         assertQueryEquals(expected, actual);
     }
 
@@ -272,8 +272,8 @@ public class PostgreSqlDatabaseDialectTest extends BaseDialectTest<PostgreSqlDat
         final String actual = dialect.buildUpsertQueryStatement(
                 castTypesTableId,
                 castTypesTableDefinition,
-                List.of(castTypesPkColumn),
-                List.of(columnUuid, columnJson, columnJsonb));
+                Arrays.asList(castTypesPkColumn),
+                Arrays.asList(columnUuid, columnJson, columnJsonb));
         assertQueryEquals(expected, actual);
     }
 

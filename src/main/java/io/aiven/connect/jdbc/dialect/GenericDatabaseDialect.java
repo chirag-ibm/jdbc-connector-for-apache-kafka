@@ -34,20 +34,7 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -182,7 +169,7 @@ public class GenericDatabaseDialect implements DatabaseDialect {
     }
 
     protected List<String> getDefaultSinkTableTypes() {
-        return List.of(JdbcSourceTaskConfig.TABLE_TYPE_DEFAULT);
+        return Arrays.asList(JdbcSourceTaskConfig.TABLE_TYPE_DEFAULT);
     }
 
     @Override

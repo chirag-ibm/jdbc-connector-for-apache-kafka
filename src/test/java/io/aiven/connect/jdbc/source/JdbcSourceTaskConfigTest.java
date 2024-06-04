@@ -16,9 +16,9 @@
 
 package io.aiven.connect.jdbc.source;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.kafka.common.config.ConfigException;
@@ -88,7 +88,7 @@ public final class JdbcSourceTaskConfigTest {
         config.validate();
         assertEquals(
             config.getList(JdbcSourceTaskConfig.TABLES_CONFIG),
-            List.of("test-table-1", "test-table-2")
+                Arrays.asList("test-table-1", "test-table-2")
         );
     }
 

@@ -23,11 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.connect.data.Date;
@@ -54,18 +50,20 @@ import io.aiven.connect.jdbc.util.TableId;
  */
 public class PostgreSqlDatabaseDialect extends GenericDatabaseDialect {
 
-    private static final Map<Schema.Type, Class<?>> SUPPORTED_ARRAY_VALUE_TYPES_TO_JAVA = Map.of(
-            Schema.Type.INT8, short.class,
-            Schema.Type.INT16, short.class,
-            Schema.Type.INT32, int.class,
-            Schema.Type.INT64, long.class,
-            Schema.Type.FLOAT32, float.class,
-            Schema.Type.FLOAT64, double.class,
-            Schema.Type.BOOLEAN, boolean.class,
-            Schema.Type.STRING, String.class
-    );
+    private static final Map<Schema.Type, Class<?>> SUPPORTED_ARRAY_VALUE_TYPES_TO_JAVA = new HashMap(){{
+        put(Schema.Type.INT8, short.class);
+        put(Schema.Type.INT16, short.class);
+        put(Schema.Type.INT32, int.class);
+        put(Schema.Type.INT64, long.class);
+        put(Schema.Type.FLOAT32, float.class);
+        put(Schema.Type.FLOAT64, double.class);
+        put(Schema.Type.BOOLEAN, boolean.class);
+        put(Schema.Type.STRING, String.class);
+    }};
 
-    private static final List<String> SINK_TABLE_TYPE_DEFAULT = List.of("TABLE", "PARTITIONED TABLE");
+
+
+    private static final List<String> SINK_TABLE_TYPE_DEFAULT = Arrays.asList("TABLE", "PARTITIONED TABLE");
 
     /**
      * The provider for {@link PostgreSqlDatabaseDialect}.
@@ -87,7 +85,7 @@ public class PostgreSqlDatabaseDialect extends GenericDatabaseDialect {
 
     protected static final String UUID_TYPE_NAME = "uuid";
 
-    private static final List<String> CAST_TYPES = List.of(JSON_TYPE_NAME, JSONB_TYPE_NAME, UUID_TYPE_NAME);
+    private static final List<String> CAST_TYPES = Arrays.asList(JSON_TYPE_NAME, JSONB_TYPE_NAME, UUID_TYPE_NAME);
 
     /**
      * Create a new dialect instance with the given connector configuration.
@@ -405,8 +403,8 @@ public class PostgreSqlDatabaseDialect extends GenericDatabaseDialect {
 
     private String cast(final TableDefinition tableDfn, final ColumnId columnId) {
         if (Objects.nonNull(tableDfn)) {
-            final var columnDef = tableDfn.definitionForColumn(columnId.name());
-            final var typeName = columnDef.typeName();
+            final ColumnDefinition columnDef = tableDfn.definitionForColumn(columnId.name());
+            final String typeName = columnDef.typeName();
             if (Objects.nonNull(typeName)) {
                 if (CAST_TYPES.contains(typeName.toLowerCase())) {
                     return "::" + typeName.toLowerCase();

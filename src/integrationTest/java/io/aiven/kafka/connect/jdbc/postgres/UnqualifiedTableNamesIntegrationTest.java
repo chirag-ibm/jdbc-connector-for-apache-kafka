@@ -18,6 +18,7 @@ package io.aiven.kafka.connect.jdbc.postgres;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -160,7 +161,13 @@ public class UnqualifiedTableNamesIntegrationTest extends AbstractPostgresIT {
             final Set<String> actualFieldNames = valueSchema.getFields().stream()
                     .map(Schema.Field::name)
                     .collect(Collectors.toSet());
-            final Set<String> expectedFieldNames = Set.of("id", "name", "value", "date");
+
+            final Set<String> expectedFieldNames = new HashSet();
+            expectedFieldNames.add("id");
+            expectedFieldNames.add("name");
+            expectedFieldNames.add("value");
+            expectedFieldNames.add("date");
+
             assertEquals(
                     expectedFieldNames,
                     actualFieldNames,

@@ -40,8 +40,7 @@ public class AbstractPostgresIT extends AbstractIT {
                     .withTag(DEFAULT_POSTGRES_TAG);
 
     @Container
-    protected final PostgreSQLContainer<?> postgreSqlContainer = new PostgreSQLContainer<>(DEFAULT_POSTGRES_IMAGE_NAME)
-        .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
+    protected final PostgreSQLContainer<?> postgreSqlContainer = new PostgreSQLContainer<>(DEFAULT_POSTGRES_IMAGE_NAME);
 
     protected void executeUpdate(final String updateStatement) throws SQLException {
         try (final Connection connection = getDatasource().getConnection();

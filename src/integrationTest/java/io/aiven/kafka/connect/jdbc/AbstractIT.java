@@ -19,9 +19,8 @@ package io.aiven.kafka.connect.jdbc;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -48,7 +47,6 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractIT.class);
-    protected static final Duration CONTAINER_STARTUP_TIMEOUT = Duration.ofMinutes(5);
     protected static final String TEST_TOPIC_NAME = "test_topic";
     private static final String DEFAULT_KAFKA_TAG = "5.4.3";
     private static final DockerImageName DEFAULT_IMAGE_NAME =
@@ -59,13 +57,11 @@ public abstract class AbstractIT {
     @Container
     protected KafkaContainer kafkaContainer = new KafkaContainer(DEFAULT_IMAGE_NAME)
         .withNetwork(Network.newNetwork())
-        .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false")
-        .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
+        .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false");
 
     @Container
     protected SchemaRegistryContainer schemaRegistryContainer =
-        new SchemaRegistryContainer(kafkaContainer)
-            .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
+        new SchemaRegistryContainer(kafkaContainer);
 
     protected ConnectRunner connectRunner;
 
@@ -84,7 +80,7 @@ public abstract class AbstractIT {
         final Path distFile = Paths.get(System.getProperty("integration-test.distribution.file.path"));
         assert Files.exists(distFile);
 
-        final var pluginDir = Paths.get(testDir.toString(), "plugins/aiven-kafka-connect-jdbc/");
+        final Path pluginDir = Paths.get(testDir.toString(), "plugins/aiven-kafka-connect-jdbc/");
         Files.createDirectories(pluginDir);
 
         final String cmd = String.format("tar -xf %s --strip-components=1 -C %s", distFile, pluginDir);
@@ -98,7 +94,7 @@ public abstract class AbstractIT {
         try (final AdminClient adminClient = createAdminClient()) {
             LOGGER.info("Create topic {}", topic);
             final NewTopic newTopic = new NewTopic(topic, numPartitions, (short) 1);
-            adminClient.createTopics(List.of(newTopic)).all().get();
+            adminClient.createTopics(Arrays.asList(newTopic)).all().get();
         }
     }
 
@@ -145,17 +141,10 @@ public abstract class AbstractIT {
 
     @AfterEach
     final void tearDown() {
-        if (connectRunner != null) {
-            connectRunner.stop();
-        }
-        if (producer != null) {
-            producer.close();
-        }
-        if (consumer != null) {
-            consumer.close();
-        }
-        if (connectRunner != null) {
-            connectRunner.awaitStop();
-        }
+        connectRunner.stop();
+        producer.close();
+        consumer.close();
+
+        connectRunner.awaitStop();
     }
 }
